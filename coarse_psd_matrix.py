@@ -1,16 +1,11 @@
+import numpy as np
 import pyximport
 pyximport.install(
-    setup_args={"include_dirs":np.get_include()},
+    setup_args={"include_dirs": np.get_include()},
 )
+from coarse_cpu import coarse_psd  # noqa
 try:
     import cupy as cp
-    CUPY = True
-except ImportError:
-    from coarse_cpu import coarse_psd
-    CUPY = False
-
-
-if CUPY:
     def _coarse_psd_wrapper(func):
 
         def wrapped_kernel(fd_window, psd, stride, *args, **kwargs):
@@ -36,10 +31,9 @@ if CUPY:
 
         return wrapped_kernel
 
-
     with open("coarse_gpu.cu", "r") as ff:
         code = ff.read()
     kernel = cp.RawKernel(code, "coarse_psd_matrix")
     coarse_psd_matrix = _coarse_psd_wrapper(kernel)
-else:
-    from coarse_cpu import coarse_psd_matrix
+except ImportError:
+    from coarse_cpu import coarse_psd_matrix  # noqa
