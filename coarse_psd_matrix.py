@@ -6,7 +6,7 @@ try:
     import cupy as cp
     CUPY = True
 except ImportError:
-    from coarsen_cpu import coarse_psd
+    from coarse_cpu import coarse_psd
     CUPY = False
 
 
@@ -37,7 +37,7 @@ if CUPY:
         return wrapped_kernel
 
 
-    with open("coarsen_gpu.cu", "r") as ff:
+    with open("coarse_gpu.cu", "r") as ff:
         code = ff.read()
     kernel = cp.RawKernel(code, "coarse_psd_matrix")
     coarse_psd_matrix = _coarse_psd_wrapper(kernel)
