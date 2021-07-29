@@ -81,7 +81,7 @@ setup(
     package_dir={'coarse_psd_matrix': 'coarse_psd_matrix'},
     package_data={'coarse_psd_matrix': ['coarse_psd_matrix/*.cu', version_file]},
     ext_modules=cythonize([
-        Extension("coarse_cpu", ["coarse_psd_matrix/coarse_cpu.pyx"], include_dirs=[np.get_include()])
+        Extension("coarse_psd_matrix.coarse_cpu", ["coarse_psd_matrix/coarse_cpu.pyx"], include_dirs=[np.get_include()])
     ]),
     python_requires='>=3.6',
     install_requires=["numpy", "cython"],
