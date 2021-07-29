@@ -49,7 +49,7 @@ def write_version_file(version):
 def get_long_description():
     """ Finds the README and reads in the description """
     here = os.path.abspath(os.path.dirname(__file__))
-    with open(os.path.join(here, 'README.rst')) as f:
+    with open(os.path.join(here, 'README.md')) as f:
         long_description = f.read()
     return long_description
 
@@ -71,7 +71,7 @@ setup(
     name="coarse_psd_matrix",
     description='Code to compute coarsened PSD matrices',
     long_description=long_description,
-    long_description_content_type="text/x-rst",
+    long_description_content_type="text/markdown",
     url='https://github.com/ColmTalbot/psd-covariance-matrices',
     author='Colm Talbot',
     author_email='talbotcolm@gmail.com',
