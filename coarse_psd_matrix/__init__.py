@@ -1,3 +1,5 @@
+import os
+
 from .coarse_cpu import coarse_psd
 
 __all__ = ["coarse_psd", "coarse_psd_matrix"]
@@ -29,7 +31,7 @@ try:
 
         return wrapped_kernel
 
-    with open("coarse_gpu.cu", "r") as ff:
+    with open(f"{os.path.dirname(__file__)}/coarse_gpu.cu", "r") as ff:
         code = ff.read()
     kernel = cp.RawKernel(code, "coarse_psd_matrix")
     coarse_psd_matrix = _coarse_psd_wrapper(kernel)

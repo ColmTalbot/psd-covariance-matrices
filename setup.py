@@ -38,9 +38,9 @@ def write_version_file(version):
               .format(e))
         git_status = 'release'
 
-    version_file = 'coarse_psd_matrix/.version'
+    version_file = '.version'
     if not os.path.isfile(version_file):
-        with open(version_file, 'w+') as f:
+        with open(f"coarse_psd_matrix/{version_file}", 'w+') as f:
             f.write('{}: {}'.format(version, git_status))
 
     return version_file
@@ -65,8 +65,6 @@ VERSION = '0.0.1'
 version_file = write_version_file(VERSION)
 long_description = get_long_description()
 
-print(np.get_include())
-
 setup(
     name="coarse_psd_matrix",
     description='Code to compute coarsened PSD matrices',
@@ -79,9 +77,9 @@ setup(
     version=VERSION,
     packages=["coarse_psd_matrix"],
     package_dir={'coarse_psd_matrix': 'coarse_psd_matrix'},
-    package_data={'coarse_psd_matrix': ['coarse_psd_matrix/*.cu', version_file]},
+    package_data={'coarse_psd_matrix': ['coarse_gpu.cu', version_file]},
     ext_modules=cythonize([
-        Extension("coarse_cpu", ["coarse_psd_matrix/coarse_cpu.pyx"], include_dirs=[np.get_include()])
+        Extension("coarse_psd_matrix.coarse_cpu", ["coarse_psd_matrix/coarse_cpu.pyx"], include_dirs=[np.get_include()])
     ]),
     python_requires='>=3.6',
     install_requires=["numpy", "cython"],

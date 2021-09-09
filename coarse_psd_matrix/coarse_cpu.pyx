@@ -1,14 +1,10 @@
-#cython: language_level=3
+#cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True, initializedcheck=False
 
 cimport numpy as np
 import numpy as np
-import cython
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cpdef coarse_psd_matrix(np.ndarray fd_window, psd, int stride, int start=0, int stop=-1):
+cpdef coarse_psd_matrix(np.ndarray fd_window, np.ndarray psd, int stride, int start=0, int stop=-1):
     cdef int ii, jj, kk, length, output_size, x_idx, y_idx
     cdef double temp_real, temp_psd
     cdef double wxr, wxi, wyr, wyi
@@ -20,7 +16,7 @@ cpdef coarse_psd_matrix(np.ndarray fd_window, psd, int stride, int start=0, int 
         stop = length
     stop = min(stop, length)
     output_size = length // stride // 2 + 1
-    
+
     temp_real = 0
 
     fd_window_real = np.real(fd_window)
@@ -66,10 +62,7 @@ cpdef coarse_psd_matrix(np.ndarray fd_window, psd, int stride, int start=0, int 
     return output_real + 1j * output_imag
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cpdef coarse_psd(np.ndarray fd_window, psd, int stride, int start=0, int stop=-1):
+cpdef coarse_psd(np.ndarray fd_window, np.ndarray psd, int stride, int start=0, int stop=-1):
     cdef int ii, jj, kk, length, output_size, x_idx, y_idx
     cdef double temp_real, temp_psd
     cdef double wxr, wxi, wyr, wyi
@@ -78,7 +71,7 @@ cpdef coarse_psd(np.ndarray fd_window, psd, int stride, int start=0, int stop=-1
     if stop == -1:
         stop = length
     output_size = length // stride // 2 + 1
-    
+
     temp_real = 0
 
     fd_window_real = np.real(fd_window)
