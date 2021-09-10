@@ -1,10 +1,18 @@
 #cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True, initializedcheck=False
 
-cimport numpy as np
+cimport numpy as np  # noqa
 import numpy as np
 
 
-cpdef coarse_psd_matrix(np.ndarray fd_window, np.ndarray psd, int stride, int start=0, int stop=-1):
+cpdef coarse_psd_matrix(
+    np.ndarray fd_window,
+    np.ndarray psd,
+    int stride,
+    int start=0,
+    int stop=-1,
+    int first_output=0,
+    int last_output=-1,
+):
     """
     Compute the coarsened, windowed PSD. This is the leading diagonal of (16) in
     https://arxiv.org/abs/2106.13785.
@@ -38,6 +46,11 @@ cpdef coarse_psd_matrix(np.ndarray fd_window, np.ndarray psd, int stride, int st
     stop: int, optional
         The index of the input array to stop at, default=-1, i.e, the last entry.
         This can be used to parallelize the computation.
+    first_output: int
+        The index corresponding to the first output frequency, default=0.
+    last_output: int
+        The index corresponding to the last output frequency, default=-1,
+        i.e., the last entry.
 
     Notes
     =====
@@ -52,10 +65,14 @@ cpdef coarse_psd_matrix(np.ndarray fd_window, np.ndarray psd, int stride, int st
     length = len(fd_window)
     if stop == -1:
         stop = length
-    if stop > length:
+    elif stop > length:
         stop = length
     stop = min(stop, length)
-    output_size = length // stride // 2 + 1
+    if last_output == -1:
+        last_output = length
+    elif last_output > length:
+        last_output = length
+    output_size = (last_output - first_output) // stride + 1
 
     temp_real = 0
 
@@ -72,10 +89,9 @@ cpdef coarse_psd_matrix(np.ndarray fd_window, np.ndarray psd, int stride, int st
 
     for kk in range(start, stop):
         temp_psd = psd_view[kk]
-        if kk == 0:
-            x_idx = 0
-        else:
-            x_idx = length - kk
+        x_idx = first_output + length - kk
+        if x_idx >= length:
+            x_idx -= length
         for ii in range(output_size):
             wxr = window_real[x_idx]
             wxi = window_imag[x_idx]
@@ -102,7 +118,15 @@ cpdef coarse_psd_matrix(np.ndarray fd_window, np.ndarray psd, int stride, int st
     return output_real + 1j * output_imag
 
 
-cpdef coarse_psd(np.ndarray fd_window, np.ndarray psd, int stride, int start=0, int stop=-1):
+cpdef coarse_psd(
+    np.ndarray fd_window,
+    np.ndarray psd,
+    int stride,
+    int start=0,
+    int stop=-1,
+    int first_output=0,
+    int last_output=-1,
+):
     """
     Compute the coarsened, windowed PSD. This is the leading diagonal of (16) in
     https://arxiv.org/abs/2106.13785.
@@ -131,6 +155,11 @@ cpdef coarse_psd(np.ndarray fd_window, np.ndarray psd, int stride, int start=0, 
     stop: int, optional
         The index of the input array to stop at, default=-1, i.e, the last entry.
         This can be used to parallelize the computation.
+    first_output: int
+        The index corresponding to the first output frequency, default=0.
+    last_output: int
+        The index corresponding to the last output frequency, default=-1,
+        i.e., the last entry.
 
     Notes
     =====
@@ -144,6 +173,11 @@ cpdef coarse_psd(np.ndarray fd_window, np.ndarray psd, int stride, int start=0, 
     length = len(fd_window)
     if stop == -1:
         stop = length
+    if last_output == -1:
+        last_output = length
+    elif last_output > length:
+        last_output = length
+    output_size = (last_output - first_output) // stride + 1
     output_size = length // stride // 2 + 1
 
     temp_real = 0
@@ -157,10 +191,9 @@ cpdef coarse_psd(np.ndarray fd_window, np.ndarray psd, int stride, int start=0, 
 
     for kk in range(start, stop):
         temp_psd = psd_view[kk]
-        if kk == 0:
-            x_idx = 0
-        else:
-            x_idx = length - kk
+        x_idx = first_output + length - kk
+        if x_idx >= length:
+            x_idx -= length
         for ii in range(output_size):
             output_[ii] += temp_psd * window_power[x_idx]
             x_idx += stride
