@@ -83,7 +83,7 @@ def run_tbs(signal_model, signal_parameter, outdir):
         minimum_frequency=minimum_frequency,
         maximum_frequency=maximum_frequency,
         medium_duration=data_duration,
-        outdir="outdir",
+        outdir=outdir,
     )
     finite_psd = abs((_svd[0] * _svd[1]) @ _svd[2]).diagonal()
 
@@ -116,7 +116,7 @@ def run_tbs(signal_model, signal_parameter, outdir):
         short_psd=finite_psd,
         mask=mask,
         inverse=regularized_inverse,
-        n_average=500,
+        n_average=5000,
     )
     data.to_hdf(f"{outdir}/ln_bfs_{label}.hdf5", key="bayes_factors")
 
@@ -373,7 +373,7 @@ def make_final_tbs_plot(outdir, signals):
 
 if __name__ == "__main__":
     signals = dict(cbc=[30, 150], gaussian=[50, 500])
-    outdir = "outdir"
+    outdir = "population"
     for signal_model in signals:
         for signal_parameter in signals[signal_model]:
             run_tbs(signal_model, signal_parameter, outdir=outdir)

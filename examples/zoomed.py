@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
         td_noise = np.fft.irfft(coloured_noise).reshape((-1, nfft))
         fd_noise = np.fft.rfft(td_noise * short_window)
-        reduced_noise = fd_noise[: start_idx : stop_idx + 1]
+        reduced_noise = fd_noise[:, start_idx : stop_idx + 1]
 
         estimated_psd_matrix += np.einsum(
             "ki,kj->ij", reduced_noise, reduced_noise.conjugate()
