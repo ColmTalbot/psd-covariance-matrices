@@ -35,8 +35,8 @@ def run_tbs(signal_model, signal_parameter, outdir):
     data_duration = 32
     short_duration = 4
     low_frequency = 16
-    minimum_frequency = 480
-    maximum_frequency = 530
+    minimum_frequency = 20
+    maximum_frequency = 800
     tukey_alpha = 0.1
     label = f"{signal_model}_{signal_parameter}"
 
