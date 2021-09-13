@@ -96,9 +96,9 @@ if __name__ == "__main__":
 
         estimated_psd_matrix += np.einsum(
             "ki,kj->ij", reduced_noise, reduced_noise.conjugate()
-        )
-    estimated_psd_matrix /= n_average
-    estimated_psd_matrix /= sampling_frequency / 16
+        ) / 2
+    total_averages = n_average * len(reduced_noise)
+    estimated_psd_matrix /= total_averages
 
     fig, axes = plt.subplots(nrows=2, figsize=(10, 16))
     kwargs = dict(
