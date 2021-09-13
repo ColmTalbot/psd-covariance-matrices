@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from coarse_psd_matrix.utils import (
     compute_psd_matrix,
     create_parser,
-    regularized_eigenvalues,
+    regularize_eigenvalues,
     regularized_inversion,
     INTERFEROMETERS,
 )
@@ -53,7 +53,7 @@ if __name__ == "__main__":
             outdir=args.outdir,
         )
         psd_matrix = (svd[0] * svd[1]) @ svd[2]
-        eigenvalues = regularized_eigenvalues(svd[1], fill_value=0)
+        eigenvalues = regularize_eigenvalues(svd[1], fill_value=0)
         regularized_psd_matrix = (svd[0] * eigenvalues) @ svd[2]
         regularized_inverse_psd_matrix = regularized_inversion(svd)
 
