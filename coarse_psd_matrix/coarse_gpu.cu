@@ -37,8 +37,8 @@ void coarse_psd_matrix(const double* window, const double* psd, double* output_r
         wxi = window[2 * x_idx_2 + 1];
         wyr = window[2 * y_idx_2];
         wyi = window[2 * y_idx_2 + 1];
-        total_real += psd[kk] * (wxr * wyr + wxi * wyi);
-        total_imag += psd[kk] * (wxi * wyr - wxr * wyi);
+        total_real += psd[kk] * stride * (wxr * wyr + wxi * wyi);
+        total_imag += psd[kk] * stride * (wxi * wyr - wxr * wyi);
     }
     output_real[tid] = total_real;
     output_imag[tid] = total_imag;

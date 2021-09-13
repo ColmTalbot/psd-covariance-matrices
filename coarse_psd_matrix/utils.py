@@ -137,19 +137,58 @@ def band_pass_and_downsample(data, sampling_frequency, low_frequency):
     return resampled
 
 
-def regularized_eigenvalues(input, method=("window", 0.1), fill_value=np.inf):
+def regularize_eigenvalues(input, method=("window", 0.1), fill_value=np.inf):
+    """
+    Regularize the input array of eigenvalues by setting some fraction of them
+    to a specified value.
+
+    Parameters
+    ----------
+    input: np.ndarray
+        Array containing the eigenvalues.
+    method: (str, float)
+        The method to use for the regularization. The possible options are:
+        - ("window", alpha), regularize based on the power loss factor from a
+          Tukey window.
+        - ("psd", value), remove all values less than the provided value.
+        - ("fraction", value), keep the first specified fraction of eigenvalues.
+    fill_value: float
+        The value to set the regularized values to.
+
+    Returns
+    -------
+    output: np.ndarray
+        Array containing the regularized eigenvalues.
+    """
     output = input.copy()
     if method[0].lower() == "window":
         output[int(len(input) * (1 - 5 * method[1] / 8)) :] = fill_value
     elif method[0].lower() == "psd":
         output[input < method[1]] = fill_value
+    elif method[0].lower() == "fraction":
+        output[:int(len(input) * method[2])] = fill_value
     else:
         raise ValueError("Regularization method should be either 'window' or 'psd'")
     return output
 
 
 def regularized_inversion(svd, method=("window", 0.1)):
-    regularized = regularized_eigenvalues(svd[1], method)
+    """
+    Perform a regularized matrix inverse using the singular value decomposition.
+
+    Parameters
+    ----------
+    svd: (np.ndarray, np.ndarray, np.ndarray)
+        SVD of the matrix to invert.
+    method: (str, float)
+        Regularization method, see `regularize_eigenvalues`.
+
+    Returns
+    -------
+    regularized_inverse: np.ndarray
+        The regularized inverse of the input matrix.
+    """
+    regularized = regularize_eigenvalues(svd[1], method)
     regularized_inverse = svd[2].T @ np.nan_to_num(svd[0] / regularized).T
     return regularized_inverse
 
@@ -164,6 +203,51 @@ def fetch_psd_data(
     medium_duration=32,
     outdir="outdir",
 ):
+    """
+    Fetch open data and calculate a PSD.
+
+    This function will use 512s of data ending at the beginning of the
+    analysis segment.
+
+    The PSD estimation uses segments with a duration between the analysis
+    segment length and the total data duration with a Hann window.
+
+    A caching mechanism is used to minimize the number of requests to the
+    GWOSC servers.
+
+    Parameters
+    ----------
+    interferometer_name: str
+        The name of the interferometer, e.g., "L1".
+    event: str
+        The event of interest, e.g., "GW170814".
+    duration: float
+        The duration of the target segments.
+    sampling_frequency: float
+        The sampling rate to (possibly) downsample the data to.
+    low_frequency: float
+        High-pass filter frequency.
+    tukey_alpha: float
+        Tukey window turn on length.
+    medium_duration: float
+        Duration of segments to use to estimate the PSD.
+    outdir: str
+        Output directory to save the data to.
+
+    Returns
+    -------
+    data: dict
+        A dictionary containing:
+        - strain: the frequency-domain analysis data.
+        - medium_psd: the medium duration averaged PSD estimate. This is a
+          two-sided PSD estimate. This is obtained by concatenating a reversed
+          version of the one-sided estimate after removing the zero and
+          Nyquist frequency terms.
+        - psd: the "finite-duration" PSD estimated by coarsening the medium
+          duration PSD estimate.
+        - frequencies: the frequencies corresponding to the strain and psd.
+        - td_data: time-domain analysis data.
+    """
     import dill
     from gwosc.datasets import event_gps
     from scipy.signal.windows import tukey
@@ -171,11 +255,13 @@ def fetch_psd_data(
     trigger_time = event_gps(event)
     start_time = trigger_time + 2 - duration
     psd_start_time = start_time - 512
-    window = tukey(sampling_frequency * duration, tukey_alpha)
-    stride = medium_duration // duration
-    normalization = medium_duration / np.mean(window ** 2) * 3 / 32
+    window = tukey(int(sampling_frequency * duration), tukey_alpha)
+    stride = int(medium_duration // duration)
 
-    data_file = f"{outdir}/{event}_data_coarse_{medium_duration}_{sampling_frequency}_{tukey_alpha}_{interferometer_name}.pkl"
+    data_file = (
+        f"{outdir}/{event}_data_coarse_{medium_duration}_{sampling_frequency}"
+        f"_{tukey_alpha}_{interferometer_name}.pkl"
+    )
 
     if os.path.isfile(data_file):
         print(f"Loading {data_file}")
@@ -197,7 +283,7 @@ def fetch_psd_data(
             psd_data, sampling_frequency, low_frequency
         )
         print("Computing coarse PSD...")
-        _window = tukey(sampling_frequency * medium_duration, 1)
+        _window = tukey(int(sampling_frequency * medium_duration), 1)
         medium_psd = time_average_psd(
             resampled.value,
             len(_window),
@@ -207,9 +293,8 @@ def fetch_psd_data(
         medium_psd = np.concatenate([medium_psd, medium_psd[1:-1][::-1]])
         full_window = np.zeros(len(medium_psd))
         full_window[: len(window)] = window
-        full_window /= np.mean(full_window ** 2) ** 0.5
         _fd_window = np.fft.fft(full_window) / len(full_window)
-        psd = coarse_psd(_fd_window, medium_psd, stride) / normalization
+        psd = coarse_psd(_fd_window, medium_psd, stride)
 
         print("Fetching analysis data...")
         analysis_data = TimeSeries.fetch_open_data(
@@ -221,7 +306,7 @@ def fetch_psd_data(
         )
         fd_data = np.fft.rfft(resampled.value * window) / sampling_frequency
 
-        freqs = np.fft.rfftfreq(sampling_frequency * duration, 1 / sampling_frequency)
+        freqs = np.fft.rfftfreq(int(sampling_frequency * duration), 1 / sampling_frequency)
 
         data = dict(
             strain=fd_data,
@@ -249,33 +334,36 @@ def compute_psd_matrix(
     outdir="outdir",
 ):
     import dill
-    from scipy.signal.windows import tukey
-
-    data = fetch_psd_data(
-        interferometer_name=interferometer_name,
-        event=event,
-        duration=duration,
-        sampling_frequency=sampling_frequency,
-        low_frequency=low_frequency,
-        tukey_alpha=tukey_alpha,
-        medium_duration=medium_duration,
-        outdir=outdir,
+    svd_file = (
+        f"{outdir}/{event}_svd_coarse_{medium_duration}_{sampling_frequency}_"
+        f"{tukey_alpha}_{interferometer_name}_{int(minimum_frequency)}_"
+        f"{int(maximum_frequency)}.pkl"
     )
-    freqs = data["frequencies"]
-    medium_psd = data["medium_psd"]
-
-    window = tukey(sampling_frequency * duration, tukey_alpha)
-    stride = medium_duration // duration
-    normalization = medium_duration / np.mean(window ** 2) * 3 / 8 / 4
-
-    frequency_mask = (freqs >= minimum_frequency) & (freqs <= maximum_frequency)
-
-    svd_file = f"{outdir}/{event}_svd_coarse_{medium_duration}_{sampling_frequency}_{tukey_alpha}_{interferometer_name}_{int(minimum_frequency)}_{int(maximum_frequency)}.pkl"
     if os.path.isfile(svd_file):
         print(f"Loading SVD file {svd_file}...")
         with open(svd_file, "rb") as ff:
             svd = dill.load(ff)
     else:
+        from scipy.signal.windows import tukey
+
+        data = fetch_psd_data(
+            interferometer_name=interferometer_name,
+            event=event,
+            duration=duration,
+            sampling_frequency=sampling_frequency,
+            low_frequency=low_frequency,
+            tukey_alpha=tukey_alpha,
+            medium_duration=medium_duration,
+            outdir=outdir,
+        )
+        freqs = data["frequencies"]
+        medium_psd = data["medium_psd"]
+
+        window = tukey(sampling_frequency * duration, tukey_alpha)
+        stride = medium_duration // duration
+
+        frequency_mask = (freqs >= minimum_frequency) & (freqs <= maximum_frequency)
+
         from gwpopulation.cupy_utils import xp, to_numpy
         from tqdm.auto import trange
 
@@ -303,9 +391,7 @@ def compute_psd_matrix(
                 stop = min(ii + 16, len(medium_psd) - 1)
                 analytic_psd_matrix += coarse_psd_matrix(start=ii, stop=stop, **kwargs)
         else:
-            analytic_psd_matrix = (
-                coarse_psd_matrix(_fd_window, medium_psd, stride) / normalization
-            )
+            analytic_psd_matrix = coarse_psd_matrix(_fd_window, medium_psd, stride)
             analytic_psd_matrix = analytic_psd_matrix[frequency_mask][:, frequency_mask]
             xp.cuda.Stream.null.synchronize()
         end = time.time()

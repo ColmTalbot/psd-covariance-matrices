@@ -34,7 +34,8 @@ cpdef coarse_psd_matrix(
     ==========
     fd_window: array-like
         The two-sided frequency-domain window (\tilde{w}_{\mu}) at the fine
-        frequency resolution.
+        frequency resolution. The normalization of this is expected to be
+        FFT(w) / N, where N is the length of the full time-domain window.
     psd: array-like
         The two-sided fine resolution power spectral density (\mathcal{S}_{\mu}).
     stride: int
@@ -88,7 +89,7 @@ cpdef coarse_psd_matrix(
     cdef double[:] window_imag = fd_window_imag
 
     for kk in range(start, stop):
-        temp_psd = psd_view[kk]
+        temp_psd = psd_view[kk] * stride
         x_idx = first_output + length - kk
         if x_idx >= length:
             x_idx -= length
@@ -143,7 +144,8 @@ cpdef coarse_psd(
     ==========
     fd_window: array-like
         The two-sided frequency-domain window (\tilde{w}_{\mu}) at the fine
-        frequency resolution.
+        frequency resolution. The normalization of this is expected to be
+        FFT(w) / N, where N is the length of the full time-domain window.
     psd: array-like
         The two-sided fine resolution power spectral density (\mathcal{S}_{\mu}).
     stride: int
@@ -190,7 +192,7 @@ cpdef coarse_psd(
     cdef double[:] window_power = fd_window_power
 
     for kk in range(start, stop):
-        temp_psd = psd_view[kk]
+        temp_psd = psd_view[kk] * stride
         x_idx = first_output + length - kk
         if x_idx >= length:
             x_idx -= length
