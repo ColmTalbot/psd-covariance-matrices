@@ -16,7 +16,15 @@ from coarse_psd_matrix.utils import (
     regularized_inversion,
     INTERFEROMETERS,
 )
-from coarse_psd_matrix.plotting import plot_psd_matrix, set_mpl_rc_params
+from coarse_psd_matrix.plotting import plot_psd_matrix
+
+from matplotlib import rcParams
+
+rcParams["font.family"] = "serif"
+rcParams["font.serif"] = "Computer Modern Roman"
+rcParams["font.size"] = 20
+rcParams["text.usetex"] = True
+rcParams["grid.alpha"] = 0
 
 if __name__ == "__main__":
     parser = create_parser()
@@ -51,7 +59,7 @@ if __name__ == "__main__":
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(20, 16))
         plot_psd_matrix(psd_matrix, axes[0][0], **kwargs, label="C")
         plot_psd_matrix(regularized_psd_matrix, axes[0][1], **kwargs, label="\\bar{C}")
-        plot_psd_matrix(svd[0], axes[1][0], **kwargs, label="U")
+        plot_psd_matrix(svd[0].T, axes[1][0], **kwargs, label="U")
         plot_psd_matrix(
             regularized_inverse_psd_matrix, axes[1][1], **kwargs, label="\\bar{C}^{-1}"
         )
@@ -59,7 +67,6 @@ if __name__ == "__main__":
         axes[0][1].text(-15, 190, "(b)")
         axes[1][0].text(-15, 190, "(c)")
         axes[1][1].text(-15, 190, "(d)")
-        set_mpl_rc_params()
         plt.tight_layout()
         plt.savefig(f"figure_{11 + ii}.pdf")
         plt.close()

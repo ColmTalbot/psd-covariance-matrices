@@ -7,6 +7,7 @@ This will generate Figure 2.
 For more details on the method see https://arxiv.org/abs/2106.13785.
 """
 
+from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import numpy as np
 from bilby.core.utils import create_frequency_series
@@ -16,7 +17,12 @@ from coarse_psd_matrix.utils import (
     compute_psd_matrix,
     INTERFEROMETERS,
 )
-from coarse_psd_matrix.plotting import set_mpl_rc_params
+
+rcParams["font.family"] = "serif"
+rcParams["font.serif"] = "Computer Modern Roman"
+rcParams["font.size"] = 20
+rcParams["text.usetex"] = True
+rcParams["grid.alpha"] = 0
 
 
 if __name__ == "__main__":
@@ -33,7 +39,6 @@ if __name__ == "__main__":
     frequencies = frequencies[keep]
 
     axis_labels = ["(a)", "(b)", "(c)"]
-    set_mpl_rc_params()
     fig, axes = plt.subplots(
         nrows=len(interferometers), figsize=(20, 5 * len(interferometers))
     )
@@ -64,9 +69,9 @@ if __name__ == "__main__":
             label=ifo,
             color=f"C{ii}",
         )
-        plt.xlabel("Frequency [Hz]")
-        plt.ylabel("$\\max_{i\\neq j}({C_{ij}}) / C_{jj}$")
-        plt.text(-25, 190, axis_labels[ii])
+        plt.xlabel("${\\rm Frequency [Hz]}$")
+        plt.ylabel("$\\Delta_{i}$")
+        plt.text(-15, 190, axis_labels[ii])
         plt.xlim(args.minimum_frequency, args.maximum_frequency)
         plt.ylim(3e-2, 100)
     plt.legend(loc="upper right")

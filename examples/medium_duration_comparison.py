@@ -12,6 +12,14 @@ from bilby.core.utils import create_frequency_series
 
 from coarse_psd_matrix.utils import fetch_psd_data, create_parser
 
+from matplotlib import rcParams
+
+rcParams["font.family"] = "serif"
+rcParams["font.serif"] = "Computer Modern Roman"
+rcParams["font.size"] = 20
+rcParams["text.usetex"] = True
+rcParams["grid.alpha"] = 0
+
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()

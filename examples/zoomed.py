@@ -20,7 +20,15 @@ from coarse_psd_matrix.utils import (
     compute_psd_matrix,
     fetch_psd_data,
 )
-from coarse_psd_matrix.plotting import set_mpl_rc_params, plot_psd_matrix
+from coarse_psd_matrix.plotting import plot_psd_matrix
+
+from matplotlib import rcParams
+
+rcParams["font.family"] = "serif"
+rcParams["font.serif"] = "Computer Modern Roman"
+rcParams["font.size"] = 20
+rcParams["text.usetex"] = True
+rcParams["grid.alpha"] = 0
 
 
 if __name__ == "__main__":
@@ -92,7 +100,6 @@ if __name__ == "__main__":
     estimated_psd_matrix /= n_average
     estimated_psd_matrix /= sampling_frequency / 16
 
-    set_mpl_rc_params()
     fig, axes = plt.subplots(nrows=2, figsize=(10, 16))
     kwargs = dict(
         minimum_frequency=minimum_frequency,

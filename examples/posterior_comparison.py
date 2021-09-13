@@ -15,6 +15,14 @@ from corner import corner
 
 from coarse_psd_matrix.utils import create_parser
 
+from matplotlib import rcParams
+
+rcParams["font.family"] = "serif"
+rcParams["font.serif"] = "Computer Modern Roman"
+rcParams["font.size"] = 20
+rcParams["text.usetex"] = True
+rcParams["grid.alpha"] = 0
+
 LABELS = dict(
     chirp_mass="$\\mathcal{M} \\, [M_{\\odot}]$",
     mass_ratio="$q$",
@@ -51,7 +59,7 @@ def js_divergence_from_weights(weights):
 
 
 def load_posterior(event, args):
-    posterior = pd.read_hdf(f"{event}_posterior_{args.medium_duration}.hdf5")
+    posterior = pd.read_hdf(f"{event}/posterior_{args.medium_duration}.hdf5")
     ln_likelihoods = np.zeros(len(posterior))
     ln_likelihoods_diag = np.zeros(len(posterior))
     for ifo in ["H1", "L1", "V1"]:
@@ -123,7 +131,7 @@ if __name__ == "__main__":
     keys = ["mass_1_source", "mass_2_source"]
 
     for ii, event in enumerate(["GW150914", "GW170814", "GW190521"]):
-        posterior, weights = load_posterior(args.event, args)
+        posterior, weights = load_posterior(event, args)
         plot_corner(posterior, weights, keys)
         plt.savefig(f"figure_{5 + ii}.pdf")
         plt.close()
