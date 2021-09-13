@@ -7,6 +7,7 @@ This will generate Figure 4.
 For more details on the method see https://arxiv.org/abs/2106.13785.
 """
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 from coarse_psd_matrix.utils import compute_psd_matrix, create_parser
@@ -45,7 +46,9 @@ if __name__ == "__main__":
     )
 
     fig = plt.figure(figsize=(10, 8))
-    plot_psd_matrix(svd[0].T, plt.gca(), **kwargs, label="U")
+    plot_psd_matrix(svd[0].T, plt.gca(), **kwargs, label="U", origin="upper")
+    plt.ylabel("Eigenmode number")
+    plt.yticks(np.arange(0, len(svd[1]), 500), np.arange(0, len(svd[1]), 500))
     plt.tight_layout()
     plt.savefig("figure_4.pdf")
     plt.close()

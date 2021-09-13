@@ -34,6 +34,11 @@ if __name__ == "__main__":
         outdir=args.outdir,
     )
     reference_psd = fetch_psd_data(medium_duration=128, **kwargs)["psd"]
+    rcParams["font.family"] = "serif"
+    rcParams["font.serif"] = "Computer Modern Roman"
+    rcParams["font.size"] = 20
+    rcParams["text.usetex"] = True
+    rcParams["grid.alpha"] = 0
     frequencies = create_frequency_series(
         sampling_frequency=args.sampling_frequency, duration=args.duration
     )
@@ -43,8 +48,13 @@ if __name__ == "__main__":
         label = medium_duration
 
         psd = fetch_psd_data(medium_duration=medium_duration, **kwargs)["psd"]
+        rcParams["font.family"] = "serif"
+        rcParams["font.serif"] = "Computer Modern Roman"
+        rcParams["font.size"] = 20
+        rcParams["text.usetex"] = True
+        rcParams["grid.alpha"] = 0
 
-        plt.plot(frequencies, abs(psd) / abs(reference_psd), label=f"D={label}s")
+        plt.plot(frequencies, abs(psd) / abs(reference_psd), label=f"$D={label}s$")
         plt.xlim(args.minimum_frequency, args.maximum_frequency)
         plt.ylim(1 / 3, 3)
         plt.xlabel("Frequency [Hz]")

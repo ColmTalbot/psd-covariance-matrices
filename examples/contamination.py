@@ -69,9 +69,9 @@ if __name__ == "__main__":
             label=ifo,
             color=f"C{ii}",
         )
-        plt.xlabel("${\\rm Frequency [Hz]}$")
+        plt.xlabel("Frequency [Hz]")
         plt.ylabel("$\\Delta_{i}$")
-        plt.text(-15, 190, axis_labels[ii])
+        plt.text(-20, 80, axis_labels[ii])
         plt.xlim(args.minimum_frequency, args.maximum_frequency)
         plt.ylim(3e-2, 100)
     plt.legend(loc="upper right")

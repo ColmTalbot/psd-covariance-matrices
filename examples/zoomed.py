@@ -115,5 +115,4 @@ if __name__ == "__main__":
     axes[1].text(-25, 190, "(b)")
     plt.tight_layout()
     plt.savefig("figure_1.pdf")
-    plt.show()
     plt.close()

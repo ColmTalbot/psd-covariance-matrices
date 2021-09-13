@@ -7,6 +7,7 @@ This will generate Figures 11-13.
 For more details on the method see https://arxiv.org/abs/2106.13785.
 """
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 from coarse_psd_matrix.utils import (
@@ -59,14 +60,16 @@ if __name__ == "__main__":
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(20, 16))
         plot_psd_matrix(psd_matrix, axes[0][0], **kwargs, label="C")
         plot_psd_matrix(regularized_psd_matrix, axes[0][1], **kwargs, label="\\bar{C}")
-        plot_psd_matrix(svd[0].T, axes[1][0], **kwargs, label="U")
+        plot_psd_matrix(svd[0].T, axes[1][0], **kwargs, label="U", origin="upper")
+        plt.ylabel("Eigenmode number")
+        plt.yticks(np.arange(0, len(svd[1]), 500), np.arange(0, len(svd[1]), 500))
         plot_psd_matrix(
             regularized_inverse_psd_matrix, axes[1][1], **kwargs, label="\\bar{C}^{-1}"
         )
-        axes[0][0].text(-15, 190, "(a)")
-        axes[0][1].text(-15, 190, "(b)")
-        axes[1][0].text(-15, 190, "(c)")
-        axes[1][1].text(-15, 190, "(d)")
+        axes[0][0].text(-400, 2800, "(a)")
+        axes[0][1].text(-400, 2800, "(b)")
+        axes[1][0].text(-400, 250, "(c)")
+        axes[1][1].text(-400, 2800, "(d)")
         plt.tight_layout()
         plt.savefig(f"figure_{11 + ii}.pdf")
         plt.close()

@@ -37,6 +37,7 @@ rcParams["font.size"] = 20
 rcParams["text.usetex"] = True
 rcParams["grid.alpha"] = 0
 
+
 def run_tbs(signal_model, signal_parameter, outdir):
     sampling_frequency = 2048
     duration = 128

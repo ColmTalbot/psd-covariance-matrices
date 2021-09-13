@@ -39,6 +39,11 @@ if __name__ == "__main__":
             medium_duration=args.medium_duration,
             outdir=args.outdir,
         )
+        rcParams["font.family"] = "serif"
+        rcParams["font.serif"] = "Computer Modern Roman"
+        rcParams["font.size"] = 20
+        rcParams["text.usetex"] = True
+        rcParams["grid.alpha"] = 0
         plt.semilogy(svd[1], label=ifo, color=f"C{ii}")
         psd_matrix = (svd[0] * svd[1]) @ svd[2]
         psd = abs(psd_matrix.diagonal())
