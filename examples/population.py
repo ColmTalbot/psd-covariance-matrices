@@ -8,6 +8,8 @@ For more details on the method see https://arxiv.org/abs/2106.13785.
 For more details on the analysis see https://arxiv.org/abs/1712.00688.
 """
 
+import os
+
 import dill
 import matplotlib.pyplot as plt
 import numpy as np
@@ -98,6 +100,8 @@ def run_tbs(signal_model, signal_parameter, outdir):
     mask = (short_frequencies >= minimum_frequency) & (
         short_frequencies <= maximum_frequency
     )
+    np.save(f"{outdir}/frequencies.npy", short_frequencies[mask])
+    np.save(f"{outdir}/finite_psd.npy", finite_psd)
     signal = SIGNAL_MODELS[signal_model](
         signal_parameter,
         sampling_frequency=sampling_frequency,
@@ -107,18 +111,22 @@ def run_tbs(signal_model, signal_parameter, outdir):
     signal = normalize_signal(signal=signal, psd=finite_psd)
     np.save(f"{outdir}/signal_{label}", signal)
 
-    data = run_tbs_test(
-        signal=signal,
-        psd=psd_,
-        sampling_frequency=sampling_frequency,
-        duration=duration,
-        short_duration=short_duration,
-        short_psd=finite_psd,
-        mask=mask,
-        inverse=regularized_inverse,
-        n_average=5000,
-    )
-    data.to_hdf(f"{outdir}/ln_bfs_{label}.hdf5", key="bayes_factors")
+    data_file = f"{outdir}/ln_bfs_{label}.hdf5"
+    if os.path.isfile(data_file):
+        data = pd.read_hdf(data_file)
+    else:
+        data = run_tbs_test(
+            signal=signal,
+            psd=psd_,
+            sampling_frequency=sampling_frequency,
+            duration=duration,
+            short_duration=short_duration,
+            short_psd=finite_psd,
+            mask=mask,
+            inverse=regularized_inverse,
+            n_average=5000,
+        )
+        data.to_hdf(f"{outdir}/ln_bfs_{label}.hdf5", key="bayes_factors")
 
     fig = plot_tbs_bayes_factors(data)
     fig.savefig(f"{outdir}/ln_bfs_{label}.png")
@@ -168,7 +176,7 @@ def generate_gaussian_signal(peak_frequency, sampling_frequency, duration, mask)
     frequencies = create_frequency_series(
         sampling_frequency=sampling_frequency, duration=duration
     )
-    signal = np.exp(-((frequencies - peak_frequency) ** 2) / 2 / 5 ** 2) * np.exp(
+    signal = np.exp(-((frequencies - peak_frequency) ** 2) / 2 / 10 ** 2) * np.exp(
         1j * np.random.uniform(0, 2 * np.pi, len(frequencies))
     )
     signal = signal[mask]
@@ -301,6 +309,8 @@ def make_tbs_signal_plot(outdir, signals):
 
     frequencies = np.load(f"{outdir}/frequencies.npy")
     finite_psd = np.load(f"{outdir}/finite_psd.npy")
+    mask = (frequencies >= 20) & (frequencies <= 800)
+    frequencies = frequencies[mask]
 
     bounds = [(20, 100), (100, 800)]
     for ii, bound in enumerate(bounds):
@@ -323,7 +333,7 @@ def make_tbs_signal_plot(outdir, signals):
         plt.ylabel("Amplitude Spectral Density [Hz$^{-1/2}$]")
 
     plt.tight_layout()
-    plt.savefig("figure_7.pdf")
+    plt.savefig("figure_8.pdf")
     plt.close()
 
 
@@ -367,13 +377,14 @@ def make_final_tbs_plot(outdir, signals):
         plt.ylabel("$p(\\xi)$")
     plt.xlim(0.08, 0.12)
     plt.tight_layout()
-    plt.savefig("figure_8.pdf", transparent=True)
+    plt.savefig("figure_9.pdf", transparent=True)
     plt.close()
 
 
 if __name__ == "__main__":
-    signals = dict(cbc=[30, 150], gaussian=[50, 500])
+    signals = dict(gaussian=[50, 500], cbc=[30, 150])
     outdir = "population"
+    make_tbs_signal_plot(outdir=outdir, signals=signals)
     for signal_model in signals:
         for signal_parameter in signals[signal_model]:
             run_tbs(signal_model, signal_parameter, outdir=outdir)
