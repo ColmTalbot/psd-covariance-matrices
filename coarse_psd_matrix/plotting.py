@@ -1,15 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 
-
-def set_mpl_rc_params():
-    from matplotlib import rcParams
-
-    rcParams["font.family"] = "serif"
-    rcParams["font.serif"] = "Computer Modern Roman"
-    rcParams["font.size"] = 20
-    rcParams["text.usetex"] = True
-    rcParams["grid.alpha"] = 0
+rcParams["font.family"] = "serif"
+rcParams["font.serif"] = "Computer Modern Roman"
+rcParams["font.size"] = 20
+rcParams["text.usetex"] = True
+rcParams["grid.alpha"] = 0
 
 
 def plot_psd_matrix(
@@ -42,6 +39,6 @@ def plot_psd_matrix(
             ),
             np.arange(minimum_frequency, maximum_frequency, tick_step, dtype=int),
         )
-    plt.xlabel("Frequency [Hz]")
-    plt.ylabel("Frequency [Hz]")
+    plt.xlabel("${\\rm Frequency [Hz]}$")
+    plt.ylabel("${\\rm Frequency [Hz]}$")
     return

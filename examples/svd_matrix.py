@@ -10,7 +10,15 @@ For more details on the method see https://arxiv.org/abs/2106.13785.
 import matplotlib.pyplot as plt
 
 from coarse_psd_matrix.utils import compute_psd_matrix, create_parser
-from coarse_psd_matrix.plotting import plot_psd_matrix, set_mpl_rc_params
+from coarse_psd_matrix.plotting import plot_psd_matrix
+
+from matplotlib import rcParams
+
+rcParams["font.family"] = "serif"
+rcParams["font.serif"] = "Computer Modern Roman"
+rcParams["font.size"] = 20
+rcParams["text.usetex"] = True
+rcParams["grid.alpha"] = 0
 
 if __name__ == "__main__":
     parser = create_parser()
@@ -37,8 +45,7 @@ if __name__ == "__main__":
     )
 
     fig = plt.figure(figsize=(10, 8))
-    plot_psd_matrix(svd[0], plt.gca(), **kwargs, label="U")
-    set_mpl_rc_params()
+    plot_psd_matrix(svd[0].T, plt.gca(), **kwargs, label="U")
     plt.tight_layout()
     plt.savefig("figure_4.pdf")
     plt.close()

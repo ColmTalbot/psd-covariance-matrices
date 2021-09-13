@@ -28,8 +28,14 @@ from coarse_psd_matrix.utils import (
     fetch_psd_data,
     regularized_inversion,
 )
-from coarse_psd_matrix.plotting import set_mpl_rc_params
 
+from matplotlib import rcParams
+
+rcParams["font.family"] = "serif"
+rcParams["font.serif"] = "Computer Modern Roman"
+rcParams["font.size"] = 20
+rcParams["text.usetex"] = True
+rcParams["grid.alpha"] = 0
 
 def run_tbs(signal_model, signal_parameter, outdir):
     sampling_frequency = 2048
@@ -235,8 +241,6 @@ def run_tbs_test(
 
 
 def plot_tbs_bayes_factors(data):
-    set_mpl_rc_params()
-
     ln_bfs_1 = data["infinite_ln_bf"]
     ln_bfs_2 = data["finite_ln_bf"]
 
@@ -276,8 +280,6 @@ def compute_tbs_posterior(ln_bfs, xis):
 
 
 def plot_tbs_posterior(data):
-    set_mpl_rc_params()
-
     ln_bfs_1 = data["infinite_ln_bf"]
     ln_bfs_2 = data["finite_ln_bf"]
 
@@ -297,7 +299,6 @@ def plot_tbs_posterior(data):
 
 
 def make_tbs_signal_plot(outdir, signals):
-    set_mpl_rc_params()
     axis_labels = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
     labels = list()
@@ -338,7 +339,6 @@ def make_tbs_signal_plot(outdir, signals):
 
 
 def make_final_tbs_plot(outdir, signals):
-    set_mpl_rc_params()
     axis_labels = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
     labels = list()
