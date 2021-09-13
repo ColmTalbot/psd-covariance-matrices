@@ -19,12 +19,13 @@ def plot_psd_matrix(
     vmax=None,
     tick_step=10,
     label="C",
+    origin="lower",
 ):
     plt.sca(axis)
     plt.imshow(
         np.log10(np.abs(psd_matrix)),
         cmap="cividis",
-        origin="lower",
+        origin=origin,
         vmin=vmin,
         vmax=vmax,
     )
@@ -39,6 +40,6 @@ def plot_psd_matrix(
             ),
             np.arange(minimum_frequency, maximum_frequency, tick_step, dtype=int),
         )
-    plt.xlabel("${\\rm Frequency [Hz]}$")
-    plt.ylabel("${\\rm Frequency [Hz]}$")
+    plt.xlabel("Frequency [Hz]")
+    plt.ylabel("Frequency [Hz]")
     return
