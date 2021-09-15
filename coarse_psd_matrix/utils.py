@@ -292,7 +292,7 @@ def fetch_psd_data(
             len(_window),
             _window,
             sampling_frequency=sampling_frequency,
-        )
+        ) * 4 / medium_duration
         medium_psd = np.concatenate([medium_psd, medium_psd[1:-1][::-1]])
         full_window = np.zeros(len(medium_psd))
         full_window[: len(window)] = window
@@ -439,6 +439,7 @@ def reweight_posterior(
     target="posterior",
     outdir="outdir",
 ):
+    import pandas as pd
     from bilby.gw.conversion import convert_to_lal_binary_black_hole_parameters
     from bilby.gw.detector import get_empty_interferometer, PowerSpectralDensity
     from bilby.gw.source import lal_binary_black_hole
@@ -480,23 +481,9 @@ def reweight_posterior(
     target = f"{target}_{medium_duration}"
     cutoff = int(sum(frequency_mask) * np.mean(window ** 2))
 
-    filename = f"{event}_{target}.hdf5"
-    if os.path.isfile(filename):
-        import pandas as pd
+    filename = f"{event}/{target}.hdf5"
 
-        posterior = pd.read_hdf(filename)
-    else:
-        from bilby.core.result import read_in_result
-
-        result = read_in_result(f"./{event}/diagonal_wider_time_result.json")
-        if "posterior" in target:
-            posterior = result.posterior
-            n_samples = min(len(posterior), 10000)
-            posterior = posterior.sample(n_samples, replace=False)
-        elif "nested" in target:
-            posterior = result.nested_samples
-        else:
-            raise ValueError("Target should contain either 'posterior' or 'nested'")
+    posterior = pd.read_hdf(filename)
     _posterior = posterior[
         [
             "chirp_mass",
@@ -551,16 +538,12 @@ def reweight_posterior(
     noise_ln_l_diagonal = likelihood(
         diagonal_whitened, np.zeros_like(fd_data), psd, whiten_diagonal
     )
-    noise_ln_l_non_diagonal_cut = likelihood(
-        svd_whitened, np.zeros_like(fd_data), svd, whiten_svd
-    )
     svd[1] = svd[1][:cutoff]
     svd[0] = svd[0][:, :cutoff]
     svd_whitened = whiten_svd(fd_data, svd)
     noise_ln_l_non_diagonal = likelihood(
         svd_whitened, np.zeros_like(fd_data), svd, whiten_svd
     )
-    print(noise_ln_l_diagonal, noise_ln_l_non_diagonal, noise_ln_l_non_diagonal_cut)
 
     for ii in trange(len(_posterior)):
         parameters = dict(_posterior.iloc[ii])
