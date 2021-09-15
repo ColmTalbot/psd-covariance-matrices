@@ -68,9 +68,6 @@ def run_tbs(signal_model, signal_parameter, outdir):
     )
 
     short_window = tukey(sampling_frequency * short_duration, tukey_alpha)
-    window = np.zeros(sampling_frequency * data_duration)
-    window[: len(short_window)] = short_window
-    window /= np.mean(window ** 2) ** 0.5
 
     long_frequencies = np.fft.fftfreq(
         sampling_frequency * data_duration, 1 / sampling_frequency
@@ -95,6 +92,7 @@ def run_tbs(signal_model, signal_parameter, outdir):
         outdir=outdir,
     )
     finite_psd = abs((_svd[0] * _svd[1]) @ _svd[2]).diagonal()
+    finite_psd = finite_psd / np.mean(short_window ** 2)
 
     regularization_method = "psd"
     cutoff = min(finite_psd)
@@ -112,11 +110,11 @@ def run_tbs(signal_model, signal_parameter, outdir):
     signal = SIGNAL_MODELS[signal_model](
         signal_parameter,
         sampling_frequency=sampling_frequency,
-        mask=mask,
         duration=short_duration,
     )
+    np.save(f"{outdir}/signal_{label}", signal[mask])
+    signal = np.fft.rfft(np.fft.irfft(signal) * short_window)[mask]
     signal = normalize_signal(signal=signal, psd=finite_psd)
-    np.save(f"{outdir}/signal_{label}", signal)
 
     data_file = f"{outdir}/ln_bfs_{label}.hdf5"
     if os.path.isfile(data_file):
@@ -131,9 +129,11 @@ def run_tbs(signal_model, signal_parameter, outdir):
             short_psd=finite_psd,
             mask=mask,
             inverse=regularized_inverse,
+            tukey_alpha=tukey_alpha,
             n_average=5000,
         )
         data.to_hdf(f"{outdir}/ln_bfs_{label}.hdf5", key="bayes_factors")
+    data.to_hdf(f"{outdir}/ln_bfs_{label}.hdf5", key="bayes_factors")
 
     fig = plot_tbs_bayes_factors(data)
     fig.savefig(f"{outdir}/ln_bfs_{label}.png")
@@ -144,7 +144,7 @@ def run_tbs(signal_model, signal_parameter, outdir):
     plt.close(fig)
 
 
-def generate_cbc_signal(mass, sampling_frequency, duration, mask):
+def generate_cbc_signal(mass, sampling_frequency, duration):
     waveform_arguments = dict(
         waveform_approximant="IMRPhenomXPHM",
         minimum_frequency=10.0,
@@ -175,18 +175,16 @@ def generate_cbc_signal(mass, sampling_frequency, duration, mask):
     )
     signal = waveform_generator.frequency_domain_strain(injection_parameters)["plus"]
     signal *= np.exp(1j * 2 * np.pi * waveform_generator.frequency_array * 2)
-    signal = signal[mask]
     return signal
 
 
-def generate_gaussian_signal(peak_frequency, sampling_frequency, duration, mask):
+def generate_gaussian_signal(peak_frequency, sampling_frequency, duration):
     frequencies = create_frequency_series(
         sampling_frequency=sampling_frequency, duration=duration
     )
     signal = np.exp(-((frequencies - peak_frequency) ** 2) / 2 / 10 ** 2) * np.exp(
         1j * np.random.uniform(0, 2 * np.pi, len(frequencies))
     )
-    signal = signal[mask]
     return signal
 
 
@@ -205,10 +203,10 @@ def run_tbs_test(
     mask,
     short_psd,
     inverse,
+    tukey_alpha=0.1,
     n_average=50,
 ):
-    short_window = tukey(sampling_frequency * short_duration, 0.1)
-    short_window /= np.mean(short_window ** 2) ** 0.5
+    short_window = tukey(sampling_frequency * short_duration, tukey_alpha)
 
     ln_bfs_1 = np.array([])
     ln_bfs_2 = np.array([])
@@ -385,8 +383,8 @@ def make_final_tbs_plot(outdir, signals):
 if __name__ == "__main__":
     signals = dict(gaussian=[50, 500], cbc=[30, 150])
     outdir = "population"
-    make_tbs_signal_plot(outdir=outdir, signals=signals)
     for signal_model in signals:
         for signal_parameter in signals[signal_model]:
             run_tbs(signal_model, signal_parameter, outdir=outdir)
+    make_tbs_signal_plot(outdir=outdir, signals=signals)
     make_final_tbs_plot(outdir=outdir, signals=signals)

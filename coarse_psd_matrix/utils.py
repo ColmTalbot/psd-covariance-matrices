@@ -162,11 +162,13 @@ def regularize_eigenvalues(input, method=("window", 0.1), fill_value=np.inf):
     """
     output = input.copy()
     if method[0].lower() == "window":
-        output[int(len(input) * (1 - 5 * method[1] / 8)) :] = fill_value
+        n_remove = int(len(input) * (1 - 5 * method[1] / 8))
+        output[n_remove:] = fill_value
     elif method[0].lower() == "psd":
         output[input < method[1]] = fill_value
     elif method[0].lower() == "fraction":
-        output[:int(len(input) * method[2])] = fill_value
+        n_remove = int(len(input) * method[1])
+        output[n_remove:] = fill_value
     else:
         raise ValueError("Regularization method should be either 'window' or 'psd'")
     return output
@@ -284,6 +286,7 @@ def fetch_psd_data(
         )
         print("Computing coarse PSD...")
         _window = tukey(int(sampling_frequency * medium_duration), 1)
+        _window /= np.mean(_window ** 2) ** 0.5
         medium_psd = time_average_psd(
             resampled.value,
             len(_window),
@@ -370,7 +373,6 @@ def compute_psd_matrix(
         print("Computing PSD matrix...")
         full_window = np.zeros(len(medium_psd))
         full_window[: len(window)] = window
-        full_window /= np.mean(full_window ** 2) ** 0.5
         _fd_window = np.fft.fft(full_window) / len(full_window)
         start = time.time()
         if xp == np:
