@@ -44,6 +44,11 @@ if __name__ == "__main__":
         medium_duration=args.medium_duration,
         outdir=args.outdir,
     )
+    rcParams["font.family"] = "serif"
+    rcParams["font.serif"] = "Computer Modern Roman"
+    rcParams["font.size"] = 20
+    rcParams["text.usetex"] = True
+    rcParams["grid.alpha"] = 0
 
     fig = plt.figure(figsize=(10, 8))
     plot_psd_matrix(svd[0].T, plt.gca(), **kwargs, label="U", origin="upper")

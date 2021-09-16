@@ -55,11 +55,11 @@ if __name__ == "__main__":
         rcParams["grid.alpha"] = 0
 
         plt.plot(frequencies, abs(psd) / abs(reference_psd), label=f"$D={label}s$")
-        plt.xlim(args.minimum_frequency, args.maximum_frequency)
-        plt.ylim(1 / 3, 3)
-        plt.xlabel("Frequency [Hz]")
-        plt.ylabel(f"$S_{{i}} / S^{{D={medium_duration}s}}_{{i}}$")
-        plt.legend(loc="upper right")
+    plt.xlim(args.minimum_frequency, args.maximum_frequency)
+    plt.ylim(1 / 3, 3)
+    plt.xlabel("Frequency [Hz]")
+    plt.ylabel("$S_{i} / S^{D=128s}_{i}$")
+    plt.legend(loc="upper right")
     plt.tight_layout()
     plt.savefig("figure_10.pdf")
     plt.close()

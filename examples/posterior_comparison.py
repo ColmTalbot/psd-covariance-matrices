@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from corner import corner
 
-from coarse_psd_matrix.utils import create_parser
+from coarse_psd_matrix.utils import create_parser, reweight_posterior, INTERFEROMETERS
 
 from matplotlib import rcParams
 
@@ -85,6 +85,11 @@ def load_posterior(event, args):
 
 
 def plot_corner(posterior, weights, keys):
+    rcParams["font.family"] = "serif"
+    rcParams["font.serif"] = "Computer Modern Roman"
+    rcParams["font.size"] = 20
+    rcParams["text.usetex"] = True
+    rcParams["grid.alpha"] = 0
     default_kwargs = dict(
         bins=40,
         smooth=0.9,
@@ -130,7 +135,17 @@ if __name__ == "__main__":
 
     keys = ["mass_1_source", "mass_2_source"]
 
+    maximum_frequency = dict(GW190521=300)
+
     for ii, event in enumerate(["GW150914", "GW170814", "GW190521"]):
+        for ifo in INTERFEROMETERS[event]:
+            reweight_posterior(
+                interferometer_name=ifo,
+                event=event,
+                maximum_frequency=maximum_frequency.get(event, 800),
+                medium_duration=128,
+                outdir=event,
+            )
         posterior, weights = load_posterior(event, args)
         plot_corner(posterior, weights, keys)
         plt.savefig(f"figure_{5 + ii}.pdf")

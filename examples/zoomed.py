@@ -18,6 +18,7 @@ from tqdm.auto import trange
 
 from coarse_psd_matrix.utils import (
     compute_psd_matrix,
+    create_parser,
     fetch_psd_data,
 )
 from coarse_psd_matrix.plotting import plot_psd_matrix
@@ -32,18 +33,21 @@ rcParams["grid.alpha"] = 0
 
 
 if __name__ == "__main__":
-    outdir = "zoomed"
-    duration = 4
-    medium_duration = 128
-    sampling_frequency = 2048
-    low_frequency = 16
-    tukey_alpha = 0.1
+    parser = create_parser()
+    args = parser.parse_args()
+    interferometer = args.interferometer
+    outdir = args.outdir
+    duration = args.duration
+    medium_duration = args.medium_duration
+    sampling_frequency = args.sampling_frequency
+    low_frequency = args.low_frequency
+    tukey_alpha = args.tukey_alpha
     minimum_frequency = 480
     maximum_frequency = 530
-    event = "GW170814"
+    event = args.event
 
     data = fetch_psd_data(
-        interferometer_name="L1",
+        interferometer_name=interferometer,
         event=event,
         duration=duration,
         sampling_frequency=sampling_frequency,
@@ -53,7 +57,7 @@ if __name__ == "__main__":
         outdir=outdir,
     )
     svd = compute_psd_matrix(
-        interferometer_name="L1",
+        interferometer_name=interferometer,
         event=event,
         duration=duration,
         sampling_frequency=sampling_frequency,
@@ -99,6 +103,11 @@ if __name__ == "__main__":
         ) / 2
     total_averages = n_average * len(reduced_noise)
     estimated_psd_matrix /= total_averages
+    rcParams["font.family"] = "serif"
+    rcParams["font.serif"] = "Computer Modern Roman"
+    rcParams["font.size"] = 20
+    rcParams["text.usetex"] = True
+    rcParams["grid.alpha"] = 0
 
     fig, axes = plt.subplots(nrows=2, figsize=(10, 16))
     kwargs = dict(
@@ -114,5 +123,7 @@ if __name__ == "__main__":
     axes[0].text(-25, 190, "(a)")
     axes[1].text(-25, 190, "(b)")
     plt.tight_layout()
-    plt.savefig("figure_1.pdf")
+    plt.savefig(f"{outdir}/zoom_{tukey_alpha}.pdf")
+    if tukey_alpha == 0.1:
+        plt.savefig("figure_1.pdf")
     plt.close()

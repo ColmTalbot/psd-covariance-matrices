@@ -92,10 +92,9 @@ def run_tbs(signal_model, signal_parameter, outdir):
         outdir=outdir,
     )
     finite_psd = abs((_svd[0] * _svd[1]) @ _svd[2]).diagonal()
-    finite_psd = finite_psd / np.mean(short_window ** 2)
 
-    regularization_method = "psd"
-    cutoff = min(finite_psd)
+    regularization_method = "window"
+    cutoff = 0.1
     regularized_inverse = regularized_inversion(_svd, (regularization_method, cutoff))
 
     SIGNAL_MODELS = dict(cbc=generate_cbc_signal, gaussian=generate_gaussian_signal)
@@ -112,7 +111,7 @@ def run_tbs(signal_model, signal_parameter, outdir):
         sampling_frequency=sampling_frequency,
         duration=short_duration,
     )
-    np.save(f"{outdir}/signal_{label}", signal[mask])
+    np.save(f"{outdir}/signal_{label}", normalize_signal(signal=signal[mask], psd=finite_psd))
     signal = np.fft.rfft(np.fft.irfft(signal) * short_window)[mask]
     signal = normalize_signal(signal=signal, psd=finite_psd)
 
@@ -207,6 +206,7 @@ def run_tbs_test(
     n_average=50,
 ):
     short_window = tukey(sampling_frequency * short_duration, tukey_alpha)
+    normalization = 2 / short_duration
 
     ln_bfs_1 = np.array([])
     ln_bfs_2 = np.array([])
@@ -223,12 +223,12 @@ def run_tbs_test(
         fd_noise[np.random.choice(len(fd_noise), 3, replace=False)] += signal
         fd_residual = fd_noise - signal
 
-        ln_ls_1 = -np.sum((abs(fd_residual) ** 2 / short_psd).T, axis=0).real / 2
-        ln_ln_1 = -np.sum((abs(fd_noise) ** 2 / short_psd).T, axis=0).real / 2
+        ln_ls_1 = -np.sum((abs(fd_residual) ** 2 / short_psd).T, axis=0).real * normalization
+        ln_ln_1 = -np.sum((abs(fd_noise) ** 2 / short_psd).T, axis=0).real * normalization
         ln_ls_2 = (
-            -(fd_residual @ inverse @ fd_residual.conjugate().T).diagonal().real / 2
+            -(fd_residual @ inverse @ fd_residual.conjugate().T).diagonal().real * normalization
         )
-        ln_ln_2 = -(fd_noise @ inverse @ fd_noise.conjugate().T).diagonal().real / 2
+        ln_ln_2 = -(fd_noise @ inverse @ fd_noise.conjugate().T).diagonal().real * normalization
 
         ln_bfs_1 = np.concatenate([ln_bfs_1, ln_ls_1 - ln_ln_1])
         ln_bfs_2 = np.concatenate([ln_bfs_2, ln_ls_2 - ln_ln_2])
@@ -298,6 +298,11 @@ def plot_tbs_posterior(data):
 
 
 def make_tbs_signal_plot(outdir, signals):
+    rcParams["font.family"] = "serif"
+    rcParams["font.serif"] = "Computer Modern Roman"
+    rcParams["font.size"] = 20
+    rcParams["text.usetex"] = True
+    rcParams["grid.alpha"] = 0
     axis_labels = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
     labels = list()
@@ -305,7 +310,7 @@ def make_tbs_signal_plot(outdir, signals):
         for signal_parameter in signals[signal]:
             labels.append(f"{signal}_{signal_parameter}")
 
-    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(8, 10))
+    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(10, 12.5))
 
     frequencies = np.load(f"{outdir}/frequencies.npy")
     finite_psd = np.load(f"{outdir}/finite_psd.npy")
@@ -338,6 +343,11 @@ def make_tbs_signal_plot(outdir, signals):
 
 
 def make_final_tbs_plot(outdir, signals):
+    rcParams["font.family"] = "serif"
+    rcParams["font.serif"] = "Computer Modern Roman"
+    rcParams["font.size"] = 20
+    rcParams["text.usetex"] = True
+    rcParams["grid.alpha"] = 0
     axis_labels = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
     labels = list()

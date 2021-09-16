@@ -52,6 +52,11 @@ if __name__ == "__main__":
             medium_duration=args.medium_duration,
             outdir=args.outdir,
         )
+        rcParams["font.family"] = "serif"
+        rcParams["font.serif"] = "Computer Modern Roman"
+        rcParams["font.size"] = 20
+        rcParams["text.usetex"] = True
+        rcParams["grid.alpha"] = 0
         psd_matrix = (svd[0] * svd[1]) @ svd[2]
         eigenvalues = regularize_eigenvalues(svd[1], fill_value=0)
         regularized_psd_matrix = (svd[0] * eigenvalues) @ svd[2]

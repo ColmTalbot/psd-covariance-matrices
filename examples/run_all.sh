@@ -1,5 +1,12 @@
 #!/bin/bash
 
+mkdir GW150914
+mkdir GW170814
+mkdir GW190521
+mkdir medium
+mkdir population
+mkdir zoomed
+
 python zoomed.py --outdir zoomed
 python contamination.py --outdir GW170814
 python eigenvalues.py --outdir GW170814
