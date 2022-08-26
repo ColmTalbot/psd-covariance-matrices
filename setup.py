@@ -82,7 +82,7 @@ setup(
         Extension("coarse_psd_matrix.coarse_cpu", ["coarse_psd_matrix/coarse_cpu.pyx"], include_dirs=[np.get_include()])
     ]),
     python_requires='>=3.6',
-    install_requires=["numpy", "cython"],
+    install_requires=["numpy", "cython", "gwpopulation", "scipy<=1.7"],
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
